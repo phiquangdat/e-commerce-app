@@ -1,5 +1,5 @@
 const express = require("express");
-const router = express.Router;
+const router = express.Router();
 const db = require("../middleware/db");
 
 const { authenticateToken } = require("../middleware/auth");
@@ -12,7 +12,7 @@ router.get("/", authenticateToken, isAdmin, async (req, res) => {
       SELECT * FROM reviews;
     `;
     const { rows } = await db.query(query);
-    res.json(rows[0]);
+    res.json(rows);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -61,15 +61,17 @@ router.put("/:id", authenticateToken, isAdmin, async (req, res) => {
     const query = `
       UPDATE reviews
       SET user_id = $1, product_id = $2, rating = $3, comments = $4
-      WHERE id = $5;
+      WHERE id = $5
+      RETURNING *;
     `;
     const { rows } = await db.query(query, [
       user_id,
       product_id,
       rating,
       comments,
+      id,
     ]);
-    res.json({ error: error.message });
+    res.json(rows[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -83,8 +85,8 @@ router.delete("/:id", authenticateToken, isAdmin, async (req, res) => {
       DELETE FROM reviews
       WHERE id = $1;
     `;
-    const { rows } = await db.query(query, [id]);
-    res.json(rows[0]);
+    await db.query(query, [id]);
+    res.json({ message: "Review deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
