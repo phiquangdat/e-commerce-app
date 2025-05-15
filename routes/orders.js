@@ -1,4 +1,35 @@
-// routes/orders.js
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Order:
+ *       type: object
+ *       required:
+ *         - user_id
+ *         - total_amount
+ *         - shipping_address
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: The order id
+ *         user_id:
+ *           type: integer
+ *           description: The user id
+ *         total_amount:
+ *           type: number
+ *           format: float
+ *         shipping_address:
+ *           type: string
+ *         status:
+ *           type: string
+ *           enum: [pending, processing, shipped, delivered, cancelled]
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ */
 const express = require("express");
 const router = express.Router();
 const { pool } = require("../config/db");
@@ -14,6 +45,51 @@ const validateOrder = [
 ];
 
 // Get all orders for current user
+/**
+ * @swagger
+ * /orders:
+ *   get:
+ *     summary: Get user's orders
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: A list of orders
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 orders:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Order'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     currentPage:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *                     totalCount:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ */
 router.get("/", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -76,6 +152,30 @@ router.get("/", authenticateToken, async (req, res) => {
 });
 
 // Get specific order
+/**
+ * @swagger
+ * /orders/{id}:
+ *   get:
+ *     summary: Get order by id
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: The order description
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Order'
+ *       404:
+ *         description: Order not found
+ */
 router.get("/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -117,6 +217,31 @@ router.get("/:id", authenticateToken, async (req, res) => {
 });
 
 // Create new order from cart
+/**
+ * @swagger
+ * /orders:
+ *   post:
+ *     summary: Create a new order from cart
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - shipping_address
+ *             properties:
+ *               shipping_address:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Order created successfully
+ *       400:
+ *         description: Invalid input
+ */
 router.post("/", authenticateToken, validateOrder, async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -229,6 +354,45 @@ router.post("/", authenticateToken, validateOrder, async (req, res) => {
 });
 
 // Update order status (admin only)
+/**
+ * @swagger
+ * /orders/{id}/status:
+ *   put:
+ *     summary: Update order status
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [pending, processing, shipped, delivered, cancelled]
+ *     responses:
+ *       200:
+ *         description: Order status updated successfully
+ *       400:
+ *         description: Invalid status
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin access required
+ *       404:
+ *         description: Order not found
+ */
 router.put(
   "/:id/status",
   authenticateToken,
@@ -269,6 +433,30 @@ router.put(
 );
 
 // Cancel order
+/**
+ * @swagger
+ * /orders/{id}/cancel:
+ *   post:
+ *     summary: Cancel an order
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Order cancelled successfully
+ *       400:
+ *         description: Cannot cancel delivered order
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Order not found
+ */
 router.post("/:id/cancel", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -340,6 +528,55 @@ router.post("/:id/cancel", authenticateToken, async (req, res) => {
 });
 
 // Get all orders (admin only)
+/**
+ * @swagger
+ * /orders/admin/all:
+ *   get:
+ *     summary: Get all orders (admin only)
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: A list of orders
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 orders:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Order'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     currentPage:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *                     totalCount:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ */
 router.get("/admin/all", authenticateToken, isAdmin, async (req, res) => {
   try {
     const { page = 1, limit = 20, status, userId } = req.query;
@@ -410,6 +647,46 @@ router.get("/admin/all", authenticateToken, isAdmin, async (req, res) => {
 });
 
 // Checkout cart
+/**
+ * @swagger
+ * /orders/checkout:
+ *   post:
+ *     summary: Checkout cart
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - shipping_address
+ *               - payment_method
+ *             properties:
+ *               shipping_address:
+ *                 type: string
+ *               payment_method:
+ *                 type: string
+ *                 enum: [credit_card, debit_card]
+ *               card_number:
+ *                 type: string
+ *                 pattern: ^\d{16}$
+ *               expiry_date:
+ *                 type: string
+ *                 pattern: ^(0[1-9]|1[0-2])\/\d{2}$
+ *               cvv:
+ *                 type: string
+ *                 pattern: ^\d{3,4}$
+ *     responses:
+ *       201:
+ *         description: Checkout successful
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Unauthorized
+ */
 router.post(
   "/checkout",
   authenticateToken,

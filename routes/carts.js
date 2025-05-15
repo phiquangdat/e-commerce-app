@@ -1,4 +1,32 @@
-// routes/carts.js
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     CartItem:
+ *       type: object
+ *       required:
+ *         - product_id
+ *         - quantity
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: The cart item id
+ *         cart_id:
+ *           type: integer
+ *           description: The cart id
+ *         product_id:
+ *           type: integer
+ *           description: The product id
+ *         quantity:
+ *           type: integer
+ *           description: The quantity of the product
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ */
 const express = require("express");
 const router = express.Router();
 const { pool } = require("../config/db");
@@ -12,6 +40,36 @@ const validateCartItem = [
 ];
 
 // Get user's cart
+/**
+ * @swagger
+ * /cart:
+ *   get:
+ *     summary: Get user's cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: The user's cart
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 cart_id:
+ *                   type: integer
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/CartItem'
+ *                 summary:
+ *                   type: object
+ *                   properties:
+ *                     total_items:
+ *                       type: integer
+ *                     total_amount:
+ *                       type: number
+ */
 router.get("/", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -41,6 +99,36 @@ router.get("/", authenticateToken, async (req, res) => {
 });
 
 // Add item to cart
+/**
+ * @swagger
+ * /cart/items:
+ *   post:
+ *     summary: Add item to cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - product_id
+ *               - quantity
+ *             properties:
+ *               product_id:
+ *                 type: integer
+ *               quantity:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Item added to cart
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Unauthorized
+ */
 router.post("/items", authenticateToken, validateCartItem, async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -100,6 +188,7 @@ router.post("/items", authenticateToken, validateCartItem, async (req, res) => {
 });
 
 // Update cart item quantity
+
 router.put(
   "/items/:id",
   authenticateToken,
