@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { useCart } from "../../contexts/CartContext";
 import "./ProductDetails.css";
 
 export default function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [addToCartError, setAddToCartError] = useState(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -38,8 +42,24 @@ export default function ProductDetails() {
     fetchProduct();
   }, [id]);
 
-  const handleAddToCart = () => {
-    console.log("Adding to cart:", { product, quantity });
+  const handleAddToCart = async () => {
+    if (!product) return;
+
+    setAddingToCart(true);
+    setAddToCartError(null);
+
+    try {
+      const success = await addToCart(product._id, quantity);
+      if (success) {
+        navigate("/cart");
+      } else {
+        setAddToCartError("Failed to add item to cart. Please try again.");
+      }
+    } catch (err) {
+      setAddToCartError(err.message);
+    } finally {
+      setAddingToCart(false);
+    }
   };
 
   if (loading) {
@@ -73,6 +93,11 @@ export default function ProductDetails() {
           <p className="product-description">{product.description}</p>
         </div>
 
+        <div className="product-meta">
+          <p className="product-category">Category: {product.category}</p>
+          <p className="product-stock">In Stock: {product.stock}</p>
+        </div>
+
         <div className="add-to-cart">
           <div className="quantity-selector">
             <button
@@ -102,12 +127,19 @@ export default function ProductDetails() {
               +
             </button>
           </div>
+
+          {addToCartError && <p className="error-message">{addToCartError}</p>}
+
           <button
             className="add-to-cart-button"
             onClick={handleAddToCart}
             disabled={product.stock === 0}
           >
-            {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+            {addingToCart
+              ? "Adding to Cart..."
+              : product.stock === 0
+              ? "Out of Stock"
+              : "Add to Cart"}
           </button>
         </div>
       </div>
