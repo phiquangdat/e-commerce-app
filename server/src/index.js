@@ -3,6 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const productRoutes = require("./routes/products");
+const checkoutRoutes = require("./routes/checkout");
+const cartRoutes = require("./routes/cart");
 const session = require("express-session");
 const passport = require("./config/passport");
 const authRoutes = require("./routes/auth");
@@ -21,7 +23,8 @@ app.use(passport.session());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
-
+app.use("/api/checkout", checkoutRoutes);
+app.use("/api/cart", cartRoutes);
 mongoose
   .connect("mongodb://localhost:27017/ecommerce", {
     useNewUrlParser: true,
