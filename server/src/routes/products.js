@@ -44,7 +44,7 @@ const { pool } = require("../config/db");
 const { authenticateToken } = require("../middleware/auth");
 const { isAdmin } = require("../middleware/admin");
 const { body, validationResult } = require("express-validator");
-
+const Product = require("../models/Product");
 // Validation middleware
 const validateProduct = [
   body("name").notEmpty().withMessage("Name is required"),
@@ -111,96 +111,10 @@ const validateProduct = [
  */
 router.get("/", async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 10,
-      category,
-      search,
-      minPrice,
-      maxPrice,
-      sortBy = "created_at",
-      sortOrder = "desc",
-    } = req.query;
-
-    const offset = (page - 1) * limit;
-    const validSortColumns = ["name", "price", "created_at", "stock_quantity"];
-    const validSortOrders = ["asc", "desc"];
-
-    // Validate sort parameters
-    if (!validSortColumns.includes(sortBy)) {
-      return res.status(400).json({ error: "Invalid sort column" });
-    }
-    if (!validSortOrders.includes(sortOrder.toLowerCase())) {
-      return res.status(400).json({ error: "Invalid sort order" });
-    }
-
-    // Build query conditions
-    const conditions = [];
-    const values = [];
-    let paramCount = 1;
-
-    if (category) {
-      conditions.push(`category = $${paramCount}`);
-      values.push(category);
-      paramCount++;
-    }
-
-    if (search) {
-      conditions.push(
-        `(name ILIKE $${paramCount} OR description ILIKE $${paramCount})`
-      );
-      values.push(`%${search}%`);
-      paramCount++;
-    }
-
-    if (minPrice) {
-      conditions.push(`price >= $${paramCount}`);
-      values.push(minPrice);
-      paramCount++;
-    }
-
-    if (maxPrice) {
-      conditions.push(`price <= $${paramCount}`);
-      values.push(maxPrice);
-      paramCount++;
-    }
-
-    // Build the query
-    const whereClause =
-      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-
-    const query = `
-      SELECT 
-        p.*,
-        COUNT(*) OVER() as total_count,
-        COALESCE(AVG(r.rating), 0) as average_rating,
-        COUNT(r.id) as review_count
-      FROM products p
-      LEFT JOIN reviews r ON p.id = r.product_id
-      ${whereClause}
-      GROUP BY p.id
-      ORDER BY ${sortBy} ${sortOrder}
-      LIMIT $${paramCount} OFFSET $${paramCount + 1}
-    `;
-
-    values.push(limit, offset);
-    const { rows } = await pool.query(query, values);
-
-    const totalCount = rows.length > 0 ? parseInt(rows[0].total_count) : 0;
-    const totalPages = Math.ceil(totalCount / limit);
-
-    res.json({
-      products: rows,
-      pagination: {
-        currentPage: parseInt(page),
-        totalPages,
-        totalCount,
-        limit: parseInt(limit),
-      },
-    });
+    const products = await Product.find();
+    res.json(products);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message });
   }
 });
 
@@ -230,45 +144,14 @@ router.get("/", async (req, res) => {
  */
 router.get("/:id", async (req, res) => {
   try {
-    const { id } = req.params;
-    const { includeReviews = false } = req.query;
-
-    const productQuery = `
-      SELECT 
-        p.*,
-        COALESCE(AVG(r.rating), 0) as average_rating,
-        COUNT(r.id) as review_count
-      FROM products p
-      LEFT JOIN reviews r ON p.id = r.product_id
-      WHERE p.id = $1
-      GROUP BY p.id
-    `;
-    const productResult = await pool.query(productQuery, [id]);
-
-    if (productResult.rows.length === 0) {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
       return res.status(404).json({ message: "Product not found" });
-    }
-
-    const product = productResult.rows[0];
-
-    if (includeReviews) {
-      const reviewsQuery = `
-        SELECT 
-          r.*,
-          u.username
-        FROM reviews r
-        JOIN users u ON r.user_id = u.id
-        WHERE r.product_id = $1
-        ORDER BY r.created_at DESC
-      `;
-      const reviewsResult = await pool.query(reviewsQuery, [id]);
-      product.reviews = reviewsResult.rows;
     }
 
     res.json(product);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message });
   }
 });
 
