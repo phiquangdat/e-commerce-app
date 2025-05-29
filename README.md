@@ -1,115 +1,117 @@
 # E-Commerce Application
 
-A full-stack e-commerce application with React frontend and Node.js backend.
-
-## Project Structure
-
-```
-e-commerce-app/
-├── client/                 # React frontend
-│   ├── public/            # Static files
-│   └── src/               # React source files
-│       ├── components/    # Reusable components
-│       ├── pages/         # Page components
-│       └── App.js         # Main App component
-│
-└── server/                # Node.js backend
-    ├── src/
-    │   ├── config/       # Configuration files
-    │   ├── controllers/  # Route controllers
-    │   ├── middleware/   # Custom middleware
-    │   ├── models/       # Database models
-    │   ├── routes/       # API routes
-    │   └── utils/        # Utility functions
-    └── .env              # Environment variables
-```
-
-## Setup Instructions
-
-### Backend Setup
-
-1. Navigate to the server directory:
-
-   ```bash
-   cd server
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-3. Create a `.env` file with the following variables:
-
-   ```
-   PORT=5000
-   NODE_ENV=development
-   DB_USER=your_db_user
-   DB_HOST=localhost
-   DB_NAME=ecommerce
-   DB_PASSWORD=your_db_password
-   DB_PORT=5432
-   JWT_SECRET=your_jwt_secret_key
-   GOOGLE_CLIENT_ID=your_google_client_id
-   GOOGLE_CLIENT_SECRET=your_google_client_secret
-   FACEBOOK_APP_ID=your_facebook_app_id
-   FACEBOOK_APP_SECRET=your_facebook_app_secret
-   CLIENT_URL=http://localhost:3000
-   ```
-
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-### Frontend Setup
-
-1. Navigate to the client directory:
-
-   ```bash
-   cd client
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-3. Start the development server:
-   ```bash
-   npm start
-   ```
+A full-stack e-commerce application built with React, Node.js, Express, and MongoDB.
 
 ## Features
 
-- User authentication (email/password, Google, Facebook)
-- Product browsing and search
+- User authentication and authorization
+- Product browsing and searching
 - Shopping cart functionality
-- Order management
-- User profile management
+- Secure checkout with Stripe
+- Order history and tracking
+- Responsive design
 
-## Technologies Used
+## Deployment Instructions
 
-### Frontend
+### Prerequisites
 
-- React
-- React Router
-- Axios
-- CSS3
+1. Create a Render account at https://render.com
+2. Set up a MongoDB database (MongoDB Atlas recommended)
+3. Create a Stripe account for payment processing
 
-### Backend
+### Environment Variables
 
-- Node.js
-- Express
-- PostgreSQL
-- Passport.js
-- JWT Authentication
-- OAuth 2.0
+#### Backend (.env)
+
+```
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+NODE_ENV=production
+```
+
+#### Frontend (.env)
+
+```
+REACT_APP_API_URL=https://your-backend-url.onrender.com
+REACT_APP_STRIPE_PUBLIC_KEY=your_stripe_public_key
+```
+
+### Deployment Steps
+
+1. Fork and clone this repository
+2. Push your code to GitHub
+3. In Render:
+   - Create a new Web Service
+   - Connect your GitHub repository
+   - Select the root directory
+   - Choose Node.js as the runtime
+   - Add the environment variables
+   - Deploy!
+
+### Manual Deployment
+
+1. Backend:
+
+   ```bash
+   cd server
+   npm install
+   npm start
+   ```
+
+2. Frontend:
+   ```bash
+   cd client
+   npm install
+   npm run build
+   npm start
+   ```
 
 ## Development
 
-- Backend runs on: http://localhost:5000
-- Frontend runs on: http://localhost:3000
-- API documentation available at: http://localhost:5000/api-docs
+1. Clone the repository
+2. Install dependencies:
+
+   ```bash
+   # Install backend dependencies
+   cd server
+   npm install
+
+   # Install frontend dependencies
+   cd ../client
+   npm install
+   ```
+
+3. Start development servers:
+
+   ```bash
+   # Start backend server
+   cd server
+   npm run dev
+
+   # Start frontend server
+   cd ../client
+   npm start
+   ```
+
+## Technologies Used
+
+- Frontend:
+
+  - React
+  - React Router
+  - Stripe.js
+  - CSS3
+
+- Backend:
+  - Node.js
+  - Express
+  - MongoDB
+  - Mongoose
+  - JWT Authentication
+  - Stripe API
+
+## License
+
+MIT

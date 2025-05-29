@@ -1,0 +1,30 @@
+services:
+  # Backend service
+  - type: web
+    name: e-commerce-backend
+    env: node
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: NODE_ENV
+        value: production
+
+  # Frontend service
+  - type: web
+    name: e-commerce-frontend
+    env: node
+    buildCommand: cd client && npm install && npm run build
+    startCommand: cd client && npm run start
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://e-commerce-backend.onrender.com
+      - key: REACT_APP_STRIPE_PUBLIC_KEY
+        sync: false
