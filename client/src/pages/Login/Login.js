@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 import "./Login.css";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const location = useLocation();
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -18,7 +19,10 @@ export default function Login() {
     try {
       const result = await login(email, password);
       if (result.success) {
-        navigate("/");
+        login(result.data.token);
+
+        const from = location.state?.from?.pathname || "/";
+        navigate(from, { replace: true });
       } else {
         setError(result.error);
       }
